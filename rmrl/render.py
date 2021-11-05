@@ -19,6 +19,7 @@ import tempfile
 from pathlib import Path
 import json
 import re
+from typing import Tuple, List
 
 from pdfrw import PdfReader, PdfWriter, PageMerge, PdfDict, PdfArray, PdfName, \
     IndirectPdfDict, uncompress, compress
@@ -35,7 +36,8 @@ def render(source, *,
            progress_cb=lambda x: None,
            expand_pages=True,
            template_alpha=0.3,
-           only_annotated=False):
+           only_annotated=False,
+           page_selection=None):
     """
     Render a source document as a PDF file.
 
@@ -59,6 +61,13 @@ def render(source, *,
                     makes the templates invisible, 1 makes them fully dark.
     only_annotated: Boolean value (default False) indicating whether only
                     pages with annotations should be output.
+    page_selection: To export only selected pages, define a list of
+                    (start, end) tuples.
+                    start: is the (1-based) number of the first page of the
+                           corresponding range tuple
+                    end: is the (1-based) number of the last page of the
+                         corresponding range tuple, or -1 (then this range
+                         tuple will span until the last page)
     """
 
     vector=True  # TODO: Different rendering styles
@@ -88,7 +97,8 @@ def render(source, *,
     # iteration so they get released by garbage collector.
     changed_pages = []
     annotations = []
-    for i in range(0, len(pages)):
+    # for i in range(0, len(pages)):
+    for i in _prepare_page_range(page_selection, len(pages)):
         page = document.DocumentPage(source, pages[i], i)
         if source.exists(page.rmpath):
             changed_pages.append(i)
@@ -175,6 +185,21 @@ def render(source, *,
 
     log.info('exported pdf')
     return stream
+
+
+def _prepare_page_range(page_selection: List[Tuple[int, int]], num_pages: int) -> List[int]:
+    """:page_selection: List of (start, end) ranges, where start/end are 1-based
+                        indices (as the user would enter in any print dialog)
+    """
+    if page_selection is None:
+        return range(num_pages)
+    page_nums = set()
+    for start, end in page_selection:
+        if end == -1:
+            end = num_pages
+        for num in range(start-1, end):
+            page_nums.add(num)
+    return sorted(list(page_nums))
 
 
 def do_apply_ocg(basepage, rmpage, i, uses_base_pdf, ocgprop, annotations):
