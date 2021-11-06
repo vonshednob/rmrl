@@ -195,8 +195,11 @@ def _prepare_page_range(page_selection: List[Tuple[int, int]], num_pages: int) -
         return range(num_pages)
     page_nums = set()
     for start, end in page_selection:
+        start = min(max(1, start), num_pages)
         if end == -1:
             end = num_pages
+        else:
+            end = min(max(1, end), num_pages)
         for num in range(start-1, end):
             page_nums.add(num)
     return sorted(list(page_nums))
