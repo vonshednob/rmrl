@@ -27,7 +27,7 @@ from pdfrw import PdfReader, PdfWriter, PageMerge, PdfDict, PdfArray, PdfName, \
 from reportlab.pdfgen import canvas
 
 from . import document, sources
-from .constants import PDFHEIGHT, PDFWIDTH, PTPERPX, SPOOL_MAX
+from .constants import PDFHEIGHT, PDFWIDTH, PTPERPX, SPOOL_MAX, TEMPLATE_PATH
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,8 @@ def render(source, *,
            expand_pages=True,
            template_alpha=0.3,
            only_annotated=False,
-           page_selection=None):
+           page_selection=None,
+           template_path=TEMPLATE_PATH):
     """
     Render a source document as a PDF file.
 
@@ -68,6 +69,8 @@ def render(source, *,
                     end: is the (1-based) number of the last page of the
                          corresponding range tuple, or -1 (then this range
                          tuple will span until the last page)
+    template_path: A foldername or pathlib.Path pointing to the location where
+                   the SVG notebook templates are stored.
     """
 
     vector=True  # TODO: Different rendering styles
@@ -99,7 +102,7 @@ def render(source, *,
     annotations = []
     # for i in range(0, len(pages)):
     for i in _prepare_page_range(page_selection, len(pages)):
-        page = document.DocumentPage(source, pages[i], i)
+        page = document.DocumentPage(source, pages[i], i, template_path)
         if source.exists(page.rmpath):
             changed_pages.append(i)
         page.render_to_painter(pdf_canvas, vector, template_alpha)

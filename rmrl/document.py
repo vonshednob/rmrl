@@ -18,18 +18,19 @@ import gc
 import json
 import logging
 
+from pathlib import Path
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
 from . import lines, pens
-from .constants import DISPLAY, PDFHEIGHT, PDFWIDTH, PTPERPX, TEMPLATE_PATH
+from .constants import DISPLAY, PDFHEIGHT, PDFWIDTH, PTPERPX
 
 
 log = logging.getLogger(__name__)
 
 class DocumentPage:
     # A single page in a document
-    def __init__(self, source, pid, pagenum):
+    def __init__(self, source, pid, pagenum, templates_path):
         # Page 0 is the first page!
         self.source = source
         self.num = pagenum
@@ -62,7 +63,9 @@ class DocumentPage:
             # case, just take the last-available page template, which
             # is usually 'Blank'.
             template_name = template_names[min(self.num, len(template_names) - 1)]
-            template_path = TEMPLATE_PATH / f'{template_name}.svg'
+            if isinstance(templates_path, str):
+                templates_path = Path(templates_path)
+            template_path = templates_path / f'{template_name}.svg'
             if template_name != 'Blank' and template_path.exists():
                 self.template = str(template_path)
 
