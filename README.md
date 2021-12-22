@@ -3,6 +3,7 @@ Changes to the original [rscholl/rmrl](https://github.com/rschroll/rmrl)
 * Fixes the [template selection](https://github.com/rschroll/rmrl/pull/14), i.e. load the correct template per page.
 * Optionally, render only selected pages.
 * Optionally, provide a custom template path.
+* Includes support for color exports introduced in firmware v2.11, adapted from [naturale0's fork](https://github.com/naturale0/rmrl).
 
 rmrl: reMarkable Rendering Library
 ===================================
