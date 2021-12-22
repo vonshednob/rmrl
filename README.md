@@ -1,3 +1,9 @@
+Changes to the original [rscholl/rmrl](https://github.com/rschroll/rmrl)
+=======================================
+* Fixes the [template selection](https://github.com/rschroll/rmrl/pull/14), i.e. load the correct template per page.
+* Optionally, render only selected pages.
+* Optionally, provide a custom template path.
+
 rmrl: reMarkable Rendering Library
 ===================================
 rmrl is a Python library for rendering reMarkable documents to PDF files.
