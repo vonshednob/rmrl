@@ -24,6 +24,7 @@ from svglib.svglib import svg2rlg
 
 from . import lines, pens
 from .constants import DISPLAY, PDFHEIGHT, PDFWIDTH, PTPERPX
+from .pens.highlighter import HighlighterPen
 
 
 log = logging.getLogger(__name__)
@@ -48,6 +49,13 @@ class DocumentPage:
         if source.exists(metafilepath):
             with source.open(metafilepath, 'r') as f:
                 self.metadict = json.load(f)
+
+        # Try to load smart highlights
+        self.highlightdict = None
+        highlightfilepath = f'{{ID}}.highlights/{pid}.json'
+        if source.exists(highlightfilepath):
+            with source.open(highlightfilepath, 'r') as f:
+                self.highlightdict = json.load(f)
 
         # Try to load template
         self.template = None
@@ -96,6 +104,13 @@ class DocumentPage:
         pagelayers = None
         with self.source.open(self.rmpath, 'rb') as f:
             _, pagelayers = lines.readLines(f)
+
+        # Load page layers of highlights
+        if self.highlightdict:
+            _, pagelayershlght = lines.readHighlights(self.highlightdict)
+
+            from operator import add
+            pagelayers = list(map(add, pagelayers, pagelayershlght))
 
         # Load layer data
         for i in range(0, len(pagelayers)):
@@ -159,13 +174,30 @@ class DocumentPageLayer:
         self.page = page
         self.name = name
 
+        # pen colors
         self.colors = [
             #QSettings().value('pane/notebooks/export_pdf_blackink'),
             #QSettings().value('pane/notebooks/export_pdf_grayink'),
             #QSettings().value('pane/notebooks/export_pdf_whiteink')
             (0, 0, 0),
             (0.5, 0.5, 0.5),
-            (1, 1, 1)
+            (1, 1, 1),
+            (None, None, None),
+            (None, None, None),
+            (None, None, None),
+            (52/255, 120/255, 247/255),  # blue  (unnoticeably pastel blue)
+            (228/255, 95/255, 89/255)    # red   (slightly pinkish red)
+        ]
+
+        # highlight colors
+        self.highlight_colors = [
+            # Colors described as: name on rM (rendered color)
+            (None, None, None),
+            (248/255, 241/255, 36/255),  # yellow (yellow)
+            (None, None, None),
+            (248/255, 241/255, 36/255),  # yellow (yellow)
+            (183/255, 248/255, 73/255),  # green  (yellowish green)
+            (248/255, 79/255, 145/255)   # pink   (reddish pink)
         ]
 
         # Set this from the calling func
@@ -236,9 +268,15 @@ class DocumentPageLayer:
                 log.error("Unknown pen code %d" % pen)
                 penclass = pens.GenericPen
 
+            # if pen is highlighter
+            elif penclass == HighlighterPen:
+                pencolor = self.highlight_colors[color]
+            else:
+                pencolor = self.colors[color]
+
             qpen = penclass(vector=vector,
                             layer=self,
-                            color=self.colors[color])
+                            color=pencolor)
 
             # Do the needful
             qpen.paint_stroke(canvas, stroke)
