@@ -96,7 +96,7 @@ def render(source, *,
     """
 
     colors = parse_colors(black, white, gray, highlight)
-    
+
     vector=True  # TODO: Different rendering styles
     source = sources.get_source(source)
 
@@ -219,7 +219,7 @@ def _prepare_page_range(page_selection: List[Tuple[int, int]], num_pages: int) -
                         indices (as the user would enter in any print dialog)
     """
     if page_selection is None:
-        return range(num_pages)
+        return list(range(num_pages))
     page_nums = set()
     for start, end in page_selection:
         start = min(max(1, start), num_pages)

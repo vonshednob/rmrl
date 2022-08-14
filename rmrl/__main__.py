@@ -57,6 +57,13 @@ def main():
     parser.add_argument('--templates',
                         default=TEMPLATE_PATH,
                         help="Path to templates")
+    parser.add_argument('--pages',
+                        default='',
+                        help='Pages to export. Can be a list of comma-separated '
+                             'page numbers, a range of page numbers, or a mix '
+                             'of both. For example: "1,3-5,17" or "3-" to get '
+                             'all pages after (and including) page 3. '
+                             'Leave empty to select all pages (the default).')
     parser.add_argument('--version', action='version', version=VERSION)
     args = parser.parse_args()
 
@@ -69,6 +76,13 @@ def main():
     else:
         fout = sys.stdout.buffer
 
+    pages = None
+    if len(args.pages) > 0:
+        try:
+            pages = parse_page_selection(args.pages)
+        except ValueError:
+            return 1
+
     try:
         stream = render(source,
                         template_alpha=float(args.alpha),
@@ -78,6 +92,7 @@ def main():
                         white=args.white,
                         gray=args.gray,
                         highlight=args.highlight,
+                        page_selection=pages,
                         template_path=args.templates)
         fout.write(stream.read())
         fout.close()
@@ -85,6 +100,41 @@ def main():
     except InvalidColor as e:
         print(str(e), file=sys.stderr)
         return 1
+
+
+def parse_page_selection(text):
+    """Parse a user-provided selection of pages"""
+    pages = []
+
+    for part in text.split(','):
+        part = part.strip()
+        if len(part) == 0:
+            continue
+        start = part
+        end = part
+        if '-' in part:
+            start, end = part.split('-', 1)
+
+        try:
+            start = int(start)
+        except ValueError:
+            print("Invalid page number '{start}'", file=sys.stderr)
+            raise
+
+        if len(end) == 0:
+            # i.e. until the end
+            end = -1
+        else:
+            try:
+                end = int(end)
+            except ValueError:
+                print("Invalid page number '{end}'", file=sys.stderr)
+                raise
+
+        pages.append((start, end))
+
+    return pages
+
 
 if __name__ == '__main__':
     sys.exit(main())
