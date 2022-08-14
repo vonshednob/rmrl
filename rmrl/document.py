@@ -31,10 +31,11 @@ log = logging.getLogger(__name__)
 
 class DocumentPage:
     # A single page in a document
-    def __init__(self, source, pid, pagenum, templates_path):
+    def __init__(self, source, pid, pagenum, colors, templates_path):
         # Page 0 is the first page!
         self.source = source
         self.num = pagenum
+        self.colors = colors
 
         # On disk, these files are named by a UUID
         self.rmpath = f'{{ID}}/{pid}.rm'
@@ -121,7 +122,7 @@ class DocumentPage:
             except:
                 name = 'Layer ' + str(i + 1)
 
-            layer = DocumentPageLayer(self, name=name)
+            layer = DocumentPageLayer(self, name=name, colors=self.colors)
             layer.strokes = layerstrokes
             self.layers.append(layer)
 
@@ -170,34 +171,31 @@ class DocumentPage:
 class DocumentPageLayer:
     pen_widths = []
 
-    def __init__(self, page, name=None):
+    def __init__(self, page, colors, name=None):
         self.page = page
         self.name = name
 
         # pen colors
         self.colors = [
-            #QSettings().value('pane/notebooks/export_pdf_blackink'),
-            #QSettings().value('pane/notebooks/export_pdf_grayink'),
-            #QSettings().value('pane/notebooks/export_pdf_whiteink')
-            (0, 0, 0),
-            (0.5, 0.5, 0.5),
-            (1, 1, 1),
+            colors.black.rgb,
+            colors.gray.rgb,
+            colors.white.rgb,
             (None, None, None),
             (None, None, None),
             (None, None, None),
-            (52/255, 120/255, 247/255),  # blue  (unnoticeably pastel blue)
-            (228/255, 95/255, 89/255)    # red   (slightly pinkish red)
+            colors.lightblue.rgb,
+            colors.lightpink.rgb,
         ]
 
         # highlight colors
         self.highlight_colors = [
             # Colors described as: name on rM (rendered color)
             (None, None, None),
-            (248/255, 241/255, 36/255),  # yellow (yellow)
+            colors.yellow.rgb,  # yellow (yellow)
             (None, None, None),
-            (248/255, 241/255, 36/255),  # yellow (yellow)
-            (183/255, 248/255, 73/255),  # green  (yellowish green)
-            (248/255, 79/255, 145/255)   # pink   (reddish pink)
+            colors.yellow.rgb,  # yellow (yellow)
+            colors.lightgreen.rgb,  # green  (yellowish green)
+            colors.lightpink.rgb,   # pink   (reddish pink)
         ]
 
         # Set this from the calling func
