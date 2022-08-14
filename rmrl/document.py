@@ -17,8 +17,8 @@
 import gc
 import json
 import logging
-
 from pathlib import Path
+
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
@@ -117,10 +117,11 @@ class DocumentPage:
         for i in range(0, len(pagelayers)):
             layerstrokes = pagelayers[i]
 
-            try:
-                name = self.metadict['layers'][i]['name']
-            except:
-                name = 'Layer ' + str(i + 1)
+            name = f'Layer {i+1}'
+            if self.metadict is not None:
+                layers = self.metadict.get('layers', [])
+                if len(layers) > i:
+                    name = layers[i].get('name', name)
 
             layer = DocumentPageLayer(self, name=name, colors=self.colors)
             layer.strokes = layerstrokes
@@ -183,23 +184,23 @@ class DocumentPageLayer:
             (None, None, None),
             (None, None, None),
             (None, None, None),
-            colors.lightblue.rgb,
-            colors.lightpink.rgb,
+            (52/255, 120/255, 247),  # blue  (unnoticeably pastel blue)
+            (228/255, 95/255, 89/255),  # red   (slightly pinkish red)
         ]
 
         # highlight colors
         self.highlight_colors = [
             # Colors described as: name on rM (rendered color)
             (None, None, None),
-            colors.yellow.rgb,  # yellow (yellow)
+            colors.highlight.rgb,  # default highlighter
             (None, None, None),
-            colors.yellow.rgb,  # yellow (yellow)
-            colors.lightgreen.rgb,  # green  (yellowish green)
-            colors.lightpink.rgb,   # pink   (reddish pink)
+            (248/255, 241/255, 36/255),  # yellow (yellow)
+            (183/255, 248/255, 73/255),  # green  (yellowish green)
+            (248/255, 79/255, 145/255),  # pink   (reddish pink)
         ]
 
         # Set this from the calling func
-        self.strokes = None
+        self.strokes = []
 
         # Store PDF annotations with the layer, in case actual
         # PDF layers are ever implemented.
@@ -263,8 +264,9 @@ class DocumentPageLayer:
 
             penclass = pens.PEN_MAPPING.get(pen)
             if penclass is None:
-                log.error("Unknown pen code %d" % pen)
+                log.error(f"Unknown pen code {pen}")
                 penclass = pens.GenericPen
+                pencolor = self.colors[0]
 
             # if pen is highlighter
             elif penclass == HighlighterPen:

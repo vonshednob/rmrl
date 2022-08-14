@@ -16,7 +16,6 @@
 
 import logging
 import tempfile
-from pathlib import Path
 import json
 import re
 from collections import namedtuple
@@ -127,7 +126,7 @@ def render(source, *,
     annotations = []
     # for i in range(0, len(pages)):
     for i in _prepare_page_range(page_selection, len(pages)):
-        page = document.DocumentPage(source, pages[i], i, template_path)
+        page = document.DocumentPage(source, pages[i], i, colors, template_path)
         if source.exists(page.rmpath):
             changed_pages.append(i)
         page.render_to_painter(pdf_canvas, vector, template_alpha)
